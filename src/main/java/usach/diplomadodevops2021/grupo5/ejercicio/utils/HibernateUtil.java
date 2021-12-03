@@ -1,5 +1,7 @@
 package usach.diplomadodevops2021.grupo5.ejercicio.utils;
 
+import java.io.InputStream;
+
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AnnotationConfiguration;
 import org.springframework.util.ResourceUtils;
@@ -11,9 +13,10 @@ public class HibernateUtil {
     private static SessionFactory buildSessionFactory() 
     {
         try {
+        	InputStream is = ClassLoader.class.getResourceAsStream("classpath:hibernate.cfg.xml");
 
         	return new AnnotationConfiguration().configure(
-        	        ResourceUtils.getFile("classpath:hibernate.cfg.xml")).buildSessionFactory();
+        			ResourceUtils.getFile("hibernate.cfg.xml")).buildSessionFactory();
  
         } 
         catch (Throwable ex) {
