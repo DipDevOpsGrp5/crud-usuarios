@@ -16,7 +16,7 @@ public class HibernateUtil {
         	InputStream is = ClassLoader.class.getResourceAsStream("classpath:hibernate.cfg.xml");
 
         	return new AnnotationConfiguration().configure(
-        			ResourceUtils.getFile("hibernate.cfg.xml")).buildSessionFactory();
+        			ResourceUtils.getFile("classpath:hibernate.cfg.xml")).buildSessionFactory();
  
         } 
         catch (Throwable ex) {

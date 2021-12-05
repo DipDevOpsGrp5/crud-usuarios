@@ -13,10 +13,14 @@ import javax.persistence.UniqueConstraint;
 import org.hibernate.annotations.OptimisticLockType;
 import org.hibernate.annotations.OptimisticLocking;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+
+
 @Entity
 @OptimisticLocking (type = OptimisticLockType.NONE)
 @Table(name = "usuario", uniqueConstraints = {
-        @UniqueConstraint(columnNames = "id")})
+        @UniqueConstraint(columnNames = {"id", "rut"})})
 public class Usuario implements Serializable {
 
 	@Id
@@ -25,15 +29,20 @@ public class Usuario implements Serializable {
     private Long usuarioId;
 	
 	@Column(name = "nombre", nullable = false)
+	//@NotBlank(message = "Nombre no puede estar vacío.")
     private String nombre;
 	
 	@Column(name = "rut", unique = true, nullable = false)
+	//@NotBlank(message = "Rut no puede estar vacío.")
     private String rut;
 	
 	@Column(name = "correo", nullable = true)
+	//@NotBlank(message = "Correo no puede estar vacío.")
     private String correo;
 	
 	@Column(name = "password", nullable = false)
+	//@NotBlank(message = "Password no puede estar vacío.")
+	//@Size(min = 8, message = "Password debe contener al menos 8 caracteres.")
     private String password;
 	
 	private static final long serialVersionUID = -4325619662486928743L;

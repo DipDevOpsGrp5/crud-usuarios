@@ -5,9 +5,11 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,14 +30,17 @@ public class ApiController {
 	
 	@PostMapping("/create")
 	public void create(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		String nombre = request.getParameter("nombre");
-		String rut = request.getParameter("rut");
-		String correo = request.getParameter("correo");
-		String password = request.getParameter("password");
         JsonObject respuesta = new JsonObject();
         Gson gson = new Gson();
 
 		try {
+			String nombre = validarNombre(request, response);
+			
+			String rut = validarRut(request, response);
+			
+			String correo = validarCorreo(request, response);
+			
+			String password = validarPassword(request, response);
 			
 	        Session session = HibernateUtil.getSessionFactory().openSession();
 	        session.beginTransaction();
@@ -49,12 +54,22 @@ public class ApiController {
 	        session.save(user);
 	 
 	        session.getTransaction().commit();
-	        //HibernateUtil.shutdown();
             respuesta.addProperty("resultado", 0);
 		}
         catch(Exception e) {
-            respuesta.addProperty("resultado", -1);
-            respuesta.addProperty("respuesta.", e.getMessage());
+        	try {
+            	if (e.getCause() instanceof JdbcSQLIntegrityConstraintViolationException) {
+            		/*JdbcSQLIntegrityConstraintViolationException cve = (JdbcSQLIntegrityConstraintViolationException)e.getCause();
+                    if (cve.getConstraintName().equals("PUBLIC.CONSTRAINT_INDEX_22 ON PUBLIC.USUARIO(RUT) VALUES 1")){
+                    	respuesta.addProperty("error:", e.getMessage());
+                    }*/
+                }
+        	}
+        	catch(Exception ex) {
+        		
+        	}
+
+            respuesta.addProperty("error:", e.getMessage());
 
 		}
 		response.getWriter().append(gson.toJson(respuesta));
@@ -100,5 +115,97 @@ public class ApiController {
 		response.getWriter().append(gson.toJson(respuesta));
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
+	}
+
+	private String validarPassword(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String password;
+		if(request.getParameter("password").isEmpty()) {
+			response.setStatus(400);
+			throw new IOException("Password no puede estar vacío.");
+		}
+		password = request.getParameter("password");
+		if(password.length() < 8) {
+			response.setStatus(400);
+			throw new IOException("Password debe contener al menos 8 caracteres.");
+		}
+		if(!isPasswordValid(password)) {
+			response.setStatus(400);
+			throw new IOException("Password debe contener al menos una letra [A-Z a-z] y un número [0-9].");
+		}
+		return password;
+	}
+
+	private String validarCorreo(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String correo;
+		if(request.getParameter("correo").isEmpty()) {
+			response.setStatus(400);
+			throw new IOException("Correo no puede estar vacío.");
+		}
+		correo = request.getParameter("correo");
+		if(!isEmailValid(correo)) {
+			response.setStatus(400);
+			throw new IOException("'" + correo + "' no es un correo válido.");
+		};
+		return correo;
+	}
+
+	private String validarRut(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String rut;
+		if(request.getParameter("rut").isEmpty()) {
+			response.setStatus(400);
+			throw new IOException("Rut no puede estar vacío.");
+		}
+		rut = request.getParameter("rut");
+		if(!isRutValid(rut)) {
+			response.setStatus(400);
+			throw new IOException("Rut no válido.");
+		}
+		return rut;
+	}
+
+	private String validarNombre(HttpServletRequest request, HttpServletResponse response) throws IOException {
+		String nombre;
+		if(request.getParameter("nombre").isEmpty()) {
+			response.setStatus(400);
+			throw new IOException("Nombre no puede estar vacío.");
+		}
+		nombre = request.getParameter("nombre");
+		return nombre;
+	}
+	
+	boolean isEmailValid(String email) {
+	      String regex = "^[\\w-_\\.+]*[\\w-_\\.]\\@([\\w]+\\.)+[\\w]+[\\w]$";
+	      return email.matches(regex);
+   }
+	
+	boolean isPasswordValid(String email) {
+	      String regex = "^[a-zA-Z0-9]*$";
+	      return email.matches(regex);
+	}
+	
+	public boolean isRutValid(String rut) {
+	    boolean validacion = false;
+	    try {
+	        rut =  rut.toUpperCase();
+	        rut = rut.replace(".", "");
+	        rut = rut.replace("-", "");
+	        int rutAux = Integer.parseInt(rut.substring(0, rut.length() - 1));
+
+	        char dv = rut.charAt(rut.length() - 1);
+
+	        int m = 0, s = 1;
+	        for (; rutAux != 0; rutAux /= 10) {
+	            s = (s + rutAux % 10 * (9 - m++ % 6)) % 11;
+	        }
+	        if (dv == (char) (s != 0 ? s + 47 : 75)) {
+	            validacion = true;
+	        }
+
+	    } 
+	    catch (java.lang.NumberFormatException e) {
+	    } 
+	    catch (Exception e) {
+	    }
+	    return validacion;
 	}
 }
