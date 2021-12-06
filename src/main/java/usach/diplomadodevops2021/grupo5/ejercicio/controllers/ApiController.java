@@ -174,9 +174,15 @@ public class ApiController {
 	      return email.matches(regex);
    }
 	
-	boolean isPasswordValid(String email) {
-	      String regex = "^[a-zA-Z0-9]*$";
-	      return email.matches(regex);
+	boolean isPasswordValid(String password) {
+		String numRegex   = ".*[0-9].*";
+		String alphaRegex = ".*[a-zA-Z].*";
+		if (password.matches(numRegex) && password.matches(alphaRegex)) {
+		    return true;
+		}
+		else {
+			return false;
+		}
 	}
 	
 	public boolean isRutValid(String rut) {
