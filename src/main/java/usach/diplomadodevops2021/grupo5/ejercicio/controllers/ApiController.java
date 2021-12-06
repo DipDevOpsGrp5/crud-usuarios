@@ -5,11 +5,9 @@ import java.io.IOException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.h2.jdbc.JdbcSQLIntegrityConstraintViolationException;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Restrictions;
-import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,9 +32,8 @@ public class ApiController {
         Gson gson = new Gson();
 
 		try {
+
 			String nombre = validarNombre(request, response);
-			
-			String rut = validarRut(request, response);
 			
 			String correo = validarCorreo(request, response);
 			
@@ -44,12 +41,14 @@ public class ApiController {
 			
 	        Session session = HibernateUtil.getSessionFactory().openSession();
 	        session.beginTransaction();
+			String rut = validarRut(request, response, session);
 
 	        Usuario user = new Usuario();
 	        user.setNombre(nombre);
 	        user.setRut(rut);
 	        user.setCorreo(correo);
 	        user.setPassword(password);
+	        
 
 	        session.save(user);
 	 
@@ -57,18 +56,6 @@ public class ApiController {
             respuesta.addProperty("resultado", 0);
 		}
         catch(Exception e) {
-        	try {
-            	if (e.getCause() instanceof JdbcSQLIntegrityConstraintViolationException) {
-            		/*JdbcSQLIntegrityConstraintViolationException cve = (JdbcSQLIntegrityConstraintViolationException)e.getCause();
-                    if (cve.getConstraintName().equals("PUBLIC.CONSTRAINT_INDEX_22 ON PUBLIC.USUARIO(RUT) VALUES 1")){
-                    	respuesta.addProperty("error:", e.getMessage());
-                    }*/
-                }
-        	}
-        	catch(Exception ex) {
-        		
-        	}
-
             respuesta.addProperty("error:", e.getMessage());
 
 		}
@@ -149,7 +136,7 @@ public class ApiController {
 		return correo;
 	}
 
-	private String validarRut(HttpServletRequest request, HttpServletResponse response) throws IOException {
+	private String validarRut(HttpServletRequest request, HttpServletResponse response, Session session) throws IOException {
 		String rut;
 		if(request.getParameter("rut").isEmpty()) {
 			response.setStatus(400);
@@ -160,6 +147,15 @@ public class ApiController {
 			response.setStatus(400);
 			throw new IOException("Rut no válido.");
 		}
+		
+        Criteria critUsuario = session.createCriteria(Usuario.class);
+        Usuario usuario = (Usuario) critUsuario.add(Restrictions.eq("rut", rut))
+                .uniqueResult();
+        if (usuario != null) {
+        	response.setStatus(409);
+        	throw new IOException("El Rut ingresado ya existe.");
+        }
+		
 		return rut;
 	}
 
