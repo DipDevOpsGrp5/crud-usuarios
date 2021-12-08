@@ -8,6 +8,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -102,8 +103,6 @@ public class ApiController {
 		String rut = request.getParameter("rut");
         JsonObject respuesta = new JsonObject();
         Gson gson = new Gson();
-        System.out.println(rut);
-        System.out.println("test line");
 
 		try {
 			
@@ -137,6 +136,42 @@ public class ApiController {
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
 	}
+
+  @PostMapping("/update")
+  public void update(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    JsonObject respuesta = new JsonObject();
+    Gson gson = new Gson();
+    try {
+      Session session = HibernateUtil.getSessionFactory().openSession();
+      Transaction tx = session.beginTransaction();
+
+      String nombre = validarNombre(request, response);
+			String correo = validarCorreo(request, response);
+			String password = validarPassword(request, response);
+      String rut = validarRutUpdate(request, response, session);
+
+      Criteria critUsuario = session.createCriteria(Usuario.class);
+      Usuario usuario = (Usuario) critUsuario.add(Restrictions.eq("rut", rut))
+                .uniqueResult();
+      if (usuario == null) throw new Exception("Usuario no existe.");
+      
+      usuario.setNombre(nombre);
+      usuario.setCorreo(correo);
+      usuario.setPassword(password);
+      session.update(usuario);
+      tx.commit();
+      session.close();
+      respuesta.addProperty("resultado", 0);
+
+    }
+    catch(Exception e) {
+        respuesta.addProperty("resultado", -1);
+        respuesta.addProperty("respuesta.", e.getMessage());
+    }
+		response.getWriter().append(gson.toJson(respuesta));
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
+  }
 
   private JsonObject getJsonUsuario(Usuario usuario){
     JsonObject usuarioJson = new JsonObject();
@@ -202,6 +237,20 @@ public class ApiController {
 		
 		return rut;
 	}
+
+  private String validarRutUpdate(HttpServletRequest request, HttpServletResponse response, Session session) throws IOException {
+    String rut;
+		if(request.getParameter("rut").isEmpty()) {
+			response.setStatus(400);
+			throw new IOException("Rut no puede estar vacío.");
+		}
+		rut = request.getParameter("rut");
+		if(!isRutValid(rut)) {
+			response.setStatus(400);
+			throw new IOException("Rut no válido.");
+		}
+    return rut;
+  } 
 
 	private String validarNombre(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String nombre;
