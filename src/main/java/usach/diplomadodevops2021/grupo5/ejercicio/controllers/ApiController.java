@@ -10,7 +10,6 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Restrictions;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -108,12 +107,15 @@ public class ApiController {
 		try {
 			
 	        Session session = HibernateUtil.getSessionFactory().openSession();
+	        //session.beginTransaction();
 
 	        Criteria critUsuario = session.createCriteria(Usuario.class);
 	        Usuario usuario = (Usuario) critUsuario.add(Restrictions.eq("rut", rut))
                     .uniqueResult();
 	        if (usuario == null) throw new Exception("Usuario no existe.");
 	        
+	        //session.getTransaction().commit();
+	        //HibernateUtil.shutdown();
 	        JsonObject usuarioJson = new JsonObject();
 	        
 	        usuarioJson.addProperty("id", usuario.getId());
@@ -171,47 +173,17 @@ public class ApiController {
 		response.setCharacterEncoding("UTF-8");
   }
 
-	@DeleteMapping("/delete")
-	public void delete(HttpServletRequest request, HttpServletResponse response) throws IOException {
-		String id = request.getParameter("id");
-        JsonObject respuesta = new JsonObject();
-        Gson gson = new Gson();
+  private JsonObject getJsonUsuario(Usuario usuario){
+    JsonObject usuarioJson = new JsonObject();
+    usuarioJson.addProperty("id", usuario.getId());
+    usuarioJson.addProperty("nombre", usuario.getNombre());
+    usuarioJson.addProperty("rut", usuario.getRut());
+    usuarioJson.addProperty("correo", usuario.getCorreo());
+    usuarioJson.addProperty("password", usuario.getPassword());
+    return usuarioJson;
+  }
 
-		try {
-			
-	        Session session = HibernateUtil.getSessionFactory().openSession();
-	        Transaction transaction = session.beginTransaction();
-	        Criteria critUsuario = session.createCriteria(Usuario.class);
-	        Usuario usuario = (Usuario) critUsuario.add(Restrictions.eq("id", Long.parseLong(id)))
-                    .uniqueResult();
-	        if (usuario == null) throw new Exception("Usuario no existe.");
-	        
-	        session.delete(usuario);
-	        transaction.commit();
-            respuesta.addProperty("resultado", 0);
-
-		}
-        catch(Exception e) {
-            respuesta.addProperty("resultado", -1);
-            respuesta.addProperty("respuesta.", e.getMessage());
-		}
-		response.getWriter().append(gson.toJson(respuesta));
-		response.setContentType("application/json");
-		response.setCharacterEncoding("UTF-8");
-	}
-	
-
-private JsonObject getJsonUsuario(Usuario usuario){
-  JsonObject usuarioJson = new JsonObject();
-  usuarioJson.addProperty("id", usuario.getId());
-  usuarioJson.addProperty("nombre", usuario.getNombre());
-  usuarioJson.addProperty("rut", usuario.getRut());
-  usuarioJson.addProperty("correo", usuario.getCorreo());
-  usuarioJson.addProperty("password", usuario.getPassword());
-  return usuarioJson;
-}
-
-private String validarPassword(HttpServletRequest request, HttpServletResponse response) throws IOException {
+	private String validarPassword(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String password;
 		if(request.getParameter("password").isEmpty()) {
 			response.setStatus(400);
