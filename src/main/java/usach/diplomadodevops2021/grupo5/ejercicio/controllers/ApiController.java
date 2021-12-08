@@ -1,6 +1,7 @@
 package usach.diplomadodevops2021.grupo5.ejercicio.controllers;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -12,8 +13,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javassist.bytecode.Descriptor.Iterator;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
 
 import usach.diplomadodevops2021.grupo5.ejercicio.dto.Usuario;
 import usach.diplomadodevops2021.grupo5.ejercicio.utils.HibernateUtil;
@@ -64,12 +68,42 @@ public class ApiController {
 		response.setCharacterEncoding("UTF-8");
 		
 	}
+
+  @GetMapping("/read_all")
+  public void readAll(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    JsonObject respuesta = new JsonObject();
+    Gson gson = new Gson();
+
+    try {
+      Session session = HibernateUtil.getSessionFactory().openSession();
+      Criteria critUsuario = session.createCriteria(Usuario.class);
+      List usuarios = critUsuario.list();
+
+      JsonArray usuariosJson = new JsonArray();
+      for (int i=0; i<usuarios.size(); i++) {
+        Usuario usuario = (Usuario) usuarios.get(i);
+        usuariosJson.add(getJsonUsuario(usuario));
+      }
+      respuesta.addProperty("resultado", usuarios.size());
+      respuesta.add("usuarios", usuariosJson);
+    }
+    catch(Exception e) {
+      respuesta.addProperty("resultado", -1);
+      respuesta.addProperty("respuesta.", e.getMessage());
+    }
+
+		response.getWriter().append(gson.toJson(respuesta));
+		response.setContentType("application/json");
+		response.setCharacterEncoding("UTF-8");
+  }
 	
 	@GetMapping("/read")
 	public void read(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String rut = request.getParameter("rut");
         JsonObject respuesta = new JsonObject();
         Gson gson = new Gson();
+        System.out.println(rut);
+        System.out.println("test line");
 
 		try {
 			
@@ -103,6 +137,16 @@ public class ApiController {
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
 	}
+
+  private JsonObject getJsonUsuario(Usuario usuario){
+    JsonObject usuarioJson = new JsonObject();
+    usuarioJson.addProperty("id", usuario.getId());
+    usuarioJson.addProperty("nombre", usuario.getNombre());
+    usuarioJson.addProperty("rut", usuario.getRut());
+    usuarioJson.addProperty("correo", usuario.getCorreo());
+    usuarioJson.addProperty("password", usuario.getPassword());
+    return usuarioJson;
+  }
 
 	private String validarPassword(HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String password;
