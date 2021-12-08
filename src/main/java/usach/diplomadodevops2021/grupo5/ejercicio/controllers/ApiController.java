@@ -56,7 +56,7 @@ public class ApiController {
             respuesta.addProperty("resultado", 0);
 		}
         catch(Exception e) {
-            respuesta.addProperty("error:", e.getMessage());
+            respuesta.addProperty("error", e.getMessage());
 
 		}
 		response.getWriter().append(gson.toJson(respuesta));
