@@ -28,7 +28,7 @@ public class ApiController {
 
 	@GetMapping("/")
 	public String inicio() {
-		return "Bienvenido al ejercicio numero  del diplomado de devops de usach.";
+		return "Bienvenido al diplomado de devops de usach.";
 	}
 	
 	@PostMapping("/create")
