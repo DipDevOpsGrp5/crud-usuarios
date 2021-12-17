@@ -1,6 +1,6 @@
 # crud-usuarios
 
-This CRUD project allows the full management of users, the actions permitted are:
+This CRUD project implements the full management of users, the actions allowed are the next:
 
 * create
 * read
