@@ -141,7 +141,11 @@ public class ApiController {
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
 	}
-
+	/*
+	 * 
+	 * This method allows to update a user
+	 * 
+	 * */
   @PostMapping("/update")
   public void update(HttpServletRequest request, HttpServletResponse response) throws IOException {
     JsonObject respuesta = new JsonObject();
