@@ -31,6 +31,11 @@ public class ApiController {
 		return "Bienvenido al ejercicio numero  del diplomado de devops de usach.";
 	}
 	
+	/*
+	 * 
+	 * This method allows to add a new user to the DB
+	 * 
+	 * */
 	@PostMapping("/create")
 	public void create(HttpServletRequest request, HttpServletResponse response) throws IOException {
         JsonObject respuesta = new JsonObject();
