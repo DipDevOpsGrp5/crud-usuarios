@@ -31,6 +31,11 @@ public class ApiController {
 		return "Bienvenido al diplomado de devops de usach.";
 	}
 	
+	/*
+	 * 
+	 * This method allows to add a new user to the DB
+	 * 
+	 * */
 	@PostMapping("/create")
 	public void create(HttpServletRequest request, HttpServletResponse response) throws IOException {
         JsonObject respuesta = new JsonObject();
@@ -61,7 +66,7 @@ public class ApiController {
             respuesta.addProperty("resultado", 0);
 		}
         catch(Exception e) {
-            respuesta.addProperty("error:", e.getMessage());
+            respuesta.addProperty("error", e.getMessage());
 
 		}
 		response.getWriter().append(gson.toJson(respuesta));

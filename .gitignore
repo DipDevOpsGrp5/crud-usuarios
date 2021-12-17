@@ -31,3 +31,8 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Ejercicio 7 ###
+.log
+.class
+test/
